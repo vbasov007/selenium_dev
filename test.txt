@@ -1,0 +1,2 @@
+start www.newsru.com
+start www.google.com
