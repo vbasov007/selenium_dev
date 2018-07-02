@@ -1,4 +1,4 @@
 set browser='firefox'
 set browser_binary='C:\Program Files\Mozilla Firefox\firefox.exe'
-set browser_profile='C:\Users\basov\AppData\Roaming\Mozilla\Firefox\Profiles\6ti8l5bx.default'
+set profile_path='C:\Users\basov\AppData\Roaming\Mozilla\Firefox\Profiles\6ti8l5bx.default'
 set driver_exe_path='C:\Firefox\geckodriver.exe'

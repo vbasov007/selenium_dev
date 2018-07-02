@@ -1,9 +1,12 @@
 import time
-from split import parse_option
+
 from selenium.webdriver.common.by import By
 from selenium import webdriver as wd
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
+from split import add_https_to_url
+
+# from cmd_processor import parse_option
 
 
 class ClickerException(Exception):
@@ -35,15 +38,6 @@ class WebClicker:
             print(e)
             print('Fail to initialize {0}'.format(browser))
 
-    def execute_command(command, target, value, wait_element_sec=0):
-
-        by_= {'id': By.ID,
-              'ccs:': By.CSS_SELECTOR,
-              'class': By.CLASS_NAME,}
-
-        by, loc = parse_option(target)
-
-        pass
 
     def get_element(self, how, what):
         try:
@@ -52,7 +46,11 @@ class WebClicker:
         except NoSuchElementException as e:
             return None
 
-    def wait_element(self, how: str, what: str, timeout_sec=1):
+    def wait_element(self, name, value, time_sec):
+        how = self.get_by(name)
+        self._wait_element(how, value, time_sec)
+
+    def _wait_element(self, how: str, what: str, timeout_sec=1):
 
         for i in range(timeout_sec):
             if self.is_element_ready(how, what):
@@ -131,6 +129,67 @@ class WebClicker:
             return self.webdriver.find_element(by=how, value=what).is_enabled()
         else:
             return False
+
+    def find_elements(self, name, value, partial=False):
+        by = self.get_by(name)
+        if partial and by == By.LINK_TEXT:
+            by = By.PARTIAL_LINK_TEXT
+
+        print('find_elements({0}, {1})'.format(by, value))
+        return self.webdriver.find_elements(by, value)
+
+    def find_element(self, name, value, partial=False):
+        out = self.find_elements(name, value, partial)
+        if len(out) > 0:
+            print('{0} element(s) found'.format(len(out)))
+            return out[0]
+        else:
+            return None
+
+    def click(self, name, value, partial = False):
+        elem = self.find_element(name, value, partial)
+        elem.click()
+
+    def clear(self, name, value, partial = False):
+        elem = self.find_element(name, value, partial)
+        elem.clear()
+
+    def send_keys(self, name, value, string: str, partial=False):
+        elem = self.find_element(name, value, partial)
+        elem.send_keys(string)
+
+    def shutdown(self):
+        self.webdriver.stop_client()
+        self.webdriver.close()
+
+    def get_website(self, url):
+        self.webdriver.get(add_https_to_url(url))
+
+    def switch_to_frame(self, name, value):
+        element = self.find_element(name, value)
+        self.webdriver.switch_to.frame(element)
+
+    @staticmethod
+    def get_by(name):
+        if name == 'id':
+            by = By.ID
+        elif name == 'name':
+            by = By.NAME
+        elif name == 'xpath':
+            by = By.XPATH
+        elif name == 'link_text':
+            by = By.LINK_TEXT
+        elif name == 'tag':
+            by = By.TAG_NAME
+        elif name == 'class':
+            by = By.CLASS_NAME
+        elif name == 'css':
+            by = By.CSS_SELECTOR
+        elif name == 'partial_link_text':
+            by = By.PARTIAL_LINK_TEXT
+        else:
+            by = ''
+        return by
 
     @staticmethod
     def sleep(time_sec):
