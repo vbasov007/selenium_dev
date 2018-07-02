@@ -1,6 +1,7 @@
 import time
 
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium import webdriver as wd
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
@@ -17,6 +18,13 @@ class Do(object):
     CLICK = "click"
     CLEAR = "clear"
     SEND_KEYS = "send_keys"
+
+
+def get_html_by_element(element, inner=True):
+    if inner:
+        return element.get_attribute('innerHTML')
+    else:
+        return element.get_attribute('outerHTML')
 
 
 class WebClicker:
@@ -146,6 +154,13 @@ class WebClicker:
         else:
             return None
 
+    def get_html(self, name, value, inner=True):
+        elem = self.find_element(name, value)
+        get_html_by_element(elem, inner)
+
+    def get_full_html(self):
+        return self.webdriver.page_source
+
     def click(self, name, value, partial = False):
         elem = self.find_element(name, value, partial)
         elem.click()
@@ -154,9 +169,15 @@ class WebClicker:
         elem = self.find_element(name, value, partial)
         elem.clear()
 
-    def send_keys(self, name, value, string: str, partial=False):
-        elem = self.find_element(name, value, partial)
-        elem.send_keys(string)
+    def send_string(self, name, value, string: str, end='', partial=False):
+        elements = self.find_elements(name, value, partial)
+        if len(elements)>1:
+            print('{0} elements found, use first found'.format(len(elements)))
+        elements[0].send_keys(string + end)
+
+    # def send_key(self, element, key):
+    #    element.send_keys(Keys.RETURN)
+
 
     def shutdown(self):
         self.webdriver.stop_client()
@@ -168,6 +189,19 @@ class WebClicker:
     def switch_to_frame(self, name, value):
         element = self.find_element(name, value)
         self.webdriver.switch_to.frame(element)
+
+    def switch_to_frame_by_index(self, index):
+        self.webdriver.switch_to.frame(index)
+
+    def select_drop_down_menu(self, name, value, option_text):
+        drop_down_menu = self.find_element(name, value)
+        self.select_drop_down_menu_element(drop_down_menu, option_text)
+
+    def select_drop_down_menu_element(self, drop_down_menu, option_text):
+        for opt in drop_down_menu.find_elements_by_xpath("//*[contains(text(),'Design Registration ID')]"):
+            print("!!!{0}".format(opt.text))
+            if opt.text == option_text:
+                opt.click()
 
     @staticmethod
     def get_by(name):

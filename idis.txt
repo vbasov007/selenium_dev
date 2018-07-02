@@ -1,0 +1,18 @@
+start url=https://portal.intra.infineon.com/irj/portal
+wait id=logonuidfield
+click id=logonuidfield
+sendkeys id=logonuidfield string=basov
+click id=logonuidfield
+sendkeys id=logonpassfield string=Planet%Mars%Flight -enter
+wait xpath="//*[contains(text(),'PC1 CRM Web Client')]" time=10
+#click xpath="//*[contains(text(),'PC1 CRM Web Client')]"
+get url="https://sappc1lb.eu.infineon.com:8410/sap(bD1lbiZjPTEwMCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm"
+wait time=5
+switch_to_frame index=0
+switch_to_frame index=1
+click xpath="//*[contains(text(),'Sales Center')]"
+switch_to_frame index=0
+switch_to_frame index=1
+#click xpath="//*[contains(text(),'Design Registrations')]"
+wait id="C19_W49_V50_HT-DR-SR"
+click id="C19_W49_V50_HT-DR-SR"

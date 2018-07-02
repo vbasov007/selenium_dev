@@ -1,5 +1,9 @@
 from execute_selenium import WebClicker
+from execute_selenium import get_html_by_element
 from split import add_https_to_url, line_split
+from pretty_html import print_pretty_html
+
+from selenium.webdriver.common.keys import Keys
 
 # from pprint import pprint
 
@@ -33,7 +37,6 @@ class CmdProcessor:
             print(e)
         return
 
-
     def called_unknown(self, command_dict):
         print('Unknown command: {0}'.format(command_dict[Cmd.COMMAND]))
         return
@@ -43,24 +46,23 @@ class CmdProcessor:
                                      browser=self.browser,
                                      profile_path=self.profile_path,
                                      browser_binary=self.browser_binary)
-        if Cmd.URL in command_dict:
-            url = command_dict[Cmd.URL]
-        elif Cmd.NONAME in command_dict:
-            url = command_dict[Cmd.NONAME]
+        url = get_url(command_dict)
+        if url:
+            self.webclicker.get_website(url)
         else:
-            print("No URL provided!")
-            return
-
-        self.webclicker.get_website(url)
+            print('No URL provided! Open empty page!')
 
     def run_cmd(self, command_dict):
         with open(command_dict[Cmd.FILE]) as f:
             lines = f.readlines()
         lines = [l.strip() for l in lines]
         for line in lines:
-            print(line)
-            command = parse_command(line)
-            self.call(command)
+            if len(line) > 0:
+                if line[0] == '''#''':
+                    continue
+                print(line)
+                command = parse_command(line)
+                self.call(command)
 
     def shutdown_cmd(self, command_dict=None):
         self.webclicker.shutdown()
@@ -76,50 +78,79 @@ class CmdProcessor:
             self.browser_binary = command_dict['browser_binary']
 
     def find_elements_cmd(self, command_dict):
-        name = command_dict['name_']
-        value = command_dict[name]
+        name, value = get_locator(command_dict)
         elements = self.webclicker.find_elements(name, value)
         print_web_elements(elements)
+
 
     def start_config(self):
         self.run_cmd({Cmd.COMMAND: 'setup', Cmd.FILE: 'config.txt'})
 
     def switch_to_frame_cmd(self, command_dict):
-        name = command_dict['name_']
-        value = command_dict[name]
-        self.webclicker.switch_to_frame(name, value)
+        if 'index' in command_dict:
+            index = int(command_dict['index'])
+            self.webclicker.switch_to_frame_by_index(index)
+        else:
+            name, value = get_locator(command_dict)
+            self.webclicker.switch_to_frame(name, value)
 
     def wait_cmd(self, command_dict):
         if 'time' in command_dict:
             time_sec = int(command_dict['time'])
         else:
             time_sec = 1
-        if 'name_' not in command_dict:
-            self.webclicker.sleep(time_sec)
-        else:
-            how = command_dict['name_']
-            value = command_dict[how]
+
+        how, value = get_locator(command_dict)
+        if len(how) > 0 and len(value) > 0:
             self.webclicker.wait_element(how, value, time_sec)
+        else:
+            self.webclicker.sleep(time_sec)
 
     def click_cmd(self, command_dict):
-        name = command_dict['name_']
-        value = command_dict[name]
+        name, value = get_locator(command_dict)
         self.webclicker.click(name, value)
 
     def clear_cmd(self, command_dict):
-        name = command_dict['name_']
-        value = command_dict[name]
+        name, value = get_locator(command_dict)
         self.webclicker.clear(name, value)
 
     def sendkeys_cmd(self, command_dict):
-        name = command_dict['name_']
-        value = command_dict[name]
+        name, value = get_locator(command_dict)
         if 'string' in command_dict:
             string = command_dict['string']
         else:
             string = ''
 
-        self.webclicker.send_keys(name, value, string)
+        end = ''
+        if '-enter' in command_dict:
+            end = Keys.RETURN
+
+        self.webclicker.send_string(name, value, string + end)
+
+    def select_drop_down_cmd(self, command_dict):
+        name, value = get_locator(command_dict)
+        if 'option' in command_dict:
+            self.webclicker.select_drop_down_menu(name, value, command_dict['option'])
+
+    def get_cmd(self, command_dict):
+        url = get_url(command_dict)
+        if url:
+            self.webclicker.get_website(url)
+        else:
+            print("No URL provided!")
+
+    def html_cmd(self, command_dict):
+        name, value = get_locator(command_dict)
+
+        if "-outer" in command_dict:
+            html = self.webclicker.get_html(name, value, inner=False)
+        else:
+            html = self.webclicker.get_html(name, value, inner=True)
+
+        print_pretty_html(html)
+
+    def page_html_cmd(self, command_dict):
+        print_pretty_html(self.webclicker.get_full_html())
 
 
 def print_web_elements(elements):
@@ -134,28 +165,21 @@ def print_web_elements(elements):
         print('tag_name={0}'.format(elem.tag_name))
         print('text={0}'.format(elem.text))
 
+        html = get_html_by_element(elem, inner=False)
+        print_pretty_html(html)
 
-def parse_command(command_str: str, possible_commands=(), possible_options=()) -> dict:
+
+def parse_command(command_str: str) -> dict:
 
     cmd_dict = dict()
 
     cmd_list = line_split(command_str)
 
-    if len(possible_commands) > 0:
-        if cmd_list[0] in possible_commands:
-            cmd_dict.update({'command': cmd_list[0]})
-    else:
-        cmd_dict.update({'command': cmd_list[0]})
+    cmd_dict.update({'command': cmd_list[0]})
 
     for s in cmd_list[1:]:
         name, value = parse_option(s)
-        if not name == 'time' and not name == 'string':
-            cmd_dict.update({'name_': name})
-        if len(possible_options):
-            if name in possible_options:
-                cmd_dict.update({name: value})
-        else:
-            cmd_dict.update({name: value})
+        cmd_dict.update({name: value})
 
     return cmd_dict
 
@@ -165,13 +189,27 @@ def parse_option(target):
     res = [a.strip(' "\'') for a in res]
 
     if not res:
-        return '',''
+        return '', ''
 
     if len(res) < 2:
-        value = res[0]
-        name = 'noname'
+        value = '1'
+        name = res[0]
     else:
         name = res[0].strip()
         value = res[1].strip()
 
     return name, value
+
+
+def get_locator(command_dict: dict):
+    locator_by = ['id', 'name', 'xpath', 'link_text', 'tag', 'class', 'css', 'partial_link_text']
+    for name in locator_by:
+        if name in command_dict:
+            return name, command_dict[name]
+    return '', ''
+
+def get_url(command_dict: dict):
+    if Cmd.URL in command_dict:
+        return command_dict[Cmd.URL]
+    else:
+        return ''
