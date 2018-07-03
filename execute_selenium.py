@@ -4,20 +4,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium import webdriver as wd
 from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import ElementNotInteractableException
-from split import add_https_to_url
-
-# from cmd_processor import parse_option
 
 
 class ClickerException(Exception):
     pass
-
-
-class Do(object):
-    CLICK = "click"
-    CLEAR = "clear"
-    SEND_KEYS = "send_keys"
 
 
 def get_html_by_element(element, inner=True):
@@ -46,7 +36,6 @@ class WebClicker:
             print(e)
             print('Fail to initialize {0}'.format(browser))
 
-
     def get_element(self, how, what):
         try:
             element = self.webdriver.find_element(by=how, value=what)
@@ -69,42 +58,6 @@ class WebClicker:
                 print('Waiting: {0}'.format(i), end='\r')
 
         print("Timeout")
-        return False
-
-    def do(self, what: str, how: By, loc: str, value='', timeout_sec=1):
-
-        element = None
-
-        for i in range(timeout_sec):
-            element = self.get_element(how, loc)
-            if element is not None:
-                print('Element found!')
-                break
-            else:
-                self.sleep(1)
-                print('Waiting: {0}'.format(i), end='\r')
-
-        if element is None:
-            print("Timeout")
-            return False
-
-        try:
-            action = getattr(element, what)
-        except AttributeError:
-            print("Wrong Action with element: {0}".format(what))
-            return False
-
-        for i in range(timeout_sec):
-            try:
-                if what == Do.SEND_KEYS:
-                    action(value)
-                else:
-                    action()
-                return True
-            except ElementNotInteractableException:
-                self.sleep(1)
-
-        print("Do action failed")
         return False
 
     def get_element_value(self, how: By, path: str, timeout_sec=30):
@@ -175,16 +128,18 @@ class WebClicker:
             print('{0} elements found, use first found'.format(len(elements)))
         elements[0].send_keys(string + end)
 
-    # def send_key(self, element, key):
-    #    element.send_keys(Keys.RETURN)
 
+    def send_ctrl_key(self, name, value, key):
+        self.find_element(name, value).send_keys(Keys.CONTROL+key+Keys.NULL)
 
     def shutdown(self):
         self.webdriver.stop_client()
         self.webdriver.close()
 
     def get_website(self, url):
-        self.webdriver.get(add_https_to_url(url))
+        if not url.startswith(r'https://'):
+            url = r'https://' + url
+        self.webdriver.get(url)
 
     def switch_to_frame(self, name, value):
         element = self.find_element(name, value)
@@ -193,15 +148,11 @@ class WebClicker:
     def switch_to_frame_by_index(self, index):
         self.webdriver.switch_to.frame(index)
 
-    def select_drop_down_menu(self, name, value, option_text):
-        drop_down_menu = self.find_element(name, value)
-        self.select_drop_down_menu_element(drop_down_menu, option_text)
+    def get_attribute(self, name, value, attribute_name):
+        return self.find_element(name, value).get_attribute(attribute_name)
 
-    def select_drop_down_menu_element(self, drop_down_menu, option_text):
-        for opt in drop_down_menu.find_elements_by_xpath("//*[contains(text(),'Design Registration ID')]"):
-            print("!!!{0}".format(opt.text))
-            if opt.text == option_text:
-                opt.click()
+    def switch_to_window(self, window_name):
+        self.webdriver.switch_to.window(window_name)
 
     @staticmethod
     def get_by(name):

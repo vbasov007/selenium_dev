@@ -1,7 +1,11 @@
 from execute_selenium import WebClicker
 from execute_selenium import get_html_by_element
-from split import add_https_to_url, line_split
+
+import shlex
+
 from pretty_html import print_pretty_html
+
+
 
 from selenium.webdriver.common.keys import Keys
 
@@ -62,6 +66,9 @@ class CmdProcessor:
                     continue
                 print(line)
                 command = parse_command(line)
+                if command['command'] == 'stop_script':
+                    print("Stop script!")
+                    return
                 self.call(command)
 
     def shutdown_cmd(self, command_dict=None):
@@ -127,10 +134,11 @@ class CmdProcessor:
 
         self.webclicker.send_string(name, value, string + end)
 
-    def select_drop_down_cmd(self, command_dict):
+    def send_ctrl_key_cmd(self, command_dict):
         name, value = get_locator(command_dict)
-        if 'option' in command_dict:
-            self.webclicker.select_drop_down_menu(name, value, command_dict['option'])
+        if 'key' in command_dict:
+            self.webclicker.send_ctrl_key(name, value, command_dict['key'])
+
 
     def get_cmd(self, command_dict):
         url = get_url(command_dict)
@@ -151,6 +159,16 @@ class CmdProcessor:
 
     def page_html_cmd(self, command_dict):
         print_pretty_html(self.webclicker.get_full_html())
+
+    def switch_to_window_cmd(self, command_dict):
+        if 'window_name' in command_dict:
+            self.webclicker.switch_to_window(command_dict['window_name'])
+
+    def get_attribute_cmd(self, command_dict):
+        name, value = get_locator(command_dict)
+        if "attr" in command_dict:
+            print('Attribute {0} = {1}'.format(command_dict['attr'],
+                                               self.webclicker.get_attribute(name, value, command_dict['attr'])))
 
 
 def print_web_elements(elements):
@@ -173,7 +191,7 @@ def parse_command(command_str: str) -> dict:
 
     cmd_dict = dict()
 
-    cmd_list = line_split(command_str)
+    cmd_list = shlex.split(command_str)
 
     cmd_dict.update({'command': cmd_list[0]})
 
