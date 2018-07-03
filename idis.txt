@@ -1,4 +1,4 @@
-# open portal
+# open portal: def open_idis(url, login, password)
 start url=https://portal.intra.infineon.com/irj/portal
 # enter login and password
 wait id=logonuidfield
@@ -13,6 +13,14 @@ wait xpath="//*[contains(text(),'PC1 CRM Web Client')]" time=10
 # open idis
 get url="https://sappc1lb.eu.infineon.com:8410/sap(bD1lbiZjPTEwMCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm"
 wait time=5
+# check if idis loaded
+find_element xpath="//*[contains(text(),'Home - [SAP]')]"
+
+
+# def is_idis_start_page 
+
+# def open_dreg_search_page()
+
 # click 'Sales Center' and 'Design Registrations'
 switch_to_frame index=0
 switch_to_frame index=1
@@ -24,6 +32,10 @@ switch_to_frame index=1
 # click Design Registrations 
 wait id="C19_W49_V50_HT-DR-SR"
 click id="C19_W49_V50_HT-DR-SR"
+
+#def open_dreg_page(dreg_id)
+stop_script
+
 # change first line in the form to "Design Registration ID"
 wait id="C22_W66_V67_V68_btqopp_parameters[1].FIELD" time=5
 click id="C22_W66_V67_V68_btqopp_parameters[1].FIELD"
@@ -38,11 +50,14 @@ click link_text=20279935
 
 wait time=5
 
+def is_dreg_not_blocked_by_other_user()
+
 # check if DREG blocked for editing by other user
 find_elements xpath="//*[contains(text(),'is being processed')]"
 
 stop_script
 
+def edit_dreg(status, reason, approver, )
 # press Edit button
 click xpath="//img[@title='Edit Page']"
 wait time=5
@@ -79,7 +94,16 @@ clear id=C24_W74_V76_V80_btparterapprover_struct.partner_no
 sendkeys id=C24_W74_V76_V80_btparterapprover_struct.partner_no string='Vasily Basov' -enter
 wait time=5
 
+#read value of Design Registration Category:
+get_attribute id=C24_W74_V76_V80_btcustomerh_ext.zzqp_dmnd_flg attr=value
+
+# change Design Registration Category
+click id=C24_W74_V76_V80_btcustomerh_ext.zzqp_dmnd_flg
+click link_text="Opportunity Tracking"
+
+def save_edited_dreg()
 
 # press Back button in DREG page
 # wait id=BackButton
 # click id=BackButton
+

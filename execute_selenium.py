@@ -43,9 +43,12 @@ class WebClicker:
         except NoSuchElementException as e:
             return None
 
-    def wait_element(self, name, value, time_sec):
+    def wait(self, time_sec):
+        self.sleep(time_sec)
+
+    def wait_element(self, name, value, time_sec=10):
         how = self.get_by(name)
-        self._wait_element(how, value, time_sec)
+        return self._wait_element(how, value, time_sec)
 
     def _wait_element(self, how: str, what: str, timeout_sec=1):
 
