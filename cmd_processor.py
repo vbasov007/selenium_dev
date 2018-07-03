@@ -1,15 +1,14 @@
 from execute_selenium import WebClicker
 from execute_selenium import get_html_by_element
-
-import shlex
-
-from pretty_html import print_pretty_html
-
-
-
 from selenium.webdriver.common.keys import Keys
+import shlex
+from lxml import etree, html
 
-# from pprint import pprint
+
+def print_pretty_html(html_str):
+    doc = html.fromstring(html_str)
+    print(etree.tostring(doc, encoding='unicode', pretty_print=True))
+
 
 class Cmd(object):
     NONAME = 'noname'
@@ -18,6 +17,7 @@ class Cmd(object):
     EXIT = 'exit'
     URL = 'url'
     FILE = 'file'
+
 
 class CmdProcessor:
     def __init__(self):
