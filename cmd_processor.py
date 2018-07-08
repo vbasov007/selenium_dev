@@ -2,6 +2,7 @@ from execute_selenium import WebClicker
 from execute_selenium import get_html_by_element
 from selenium.webdriver.common.keys import Keys
 import shlex
+import re
 from lxml import etree, html
 
 
@@ -185,6 +186,28 @@ def print_web_elements(elements):
 
         html = get_html_by_element(elem, inner=False)
         print_pretty_html(html)
+
+
+def completer(command_str: str, options_dict, all_commands):
+
+    if len(command_str) < 2:
+        return all_commands, -len(command_str)
+
+    words = shlex.split(command_str)
+
+    if len(words) == 1 and command_str[-1] != ' ':
+        return [w for w in all_commands if re.match(words[0], w)], -len(words[0])
+
+    if len(words) >= 1 and command_str[-1] == ' ':
+        if words[0] in options_dict:
+            return options_dict[words[0]], 0
+
+    if len(words) >= 2 and command_str[-1] != ' ':
+        if words[0] in options_dict:
+            res = options_dict[words[0]]
+            return [w for w in res if re.match(words[-1], w)], -len(words[-1])
+
+    return [], 0
 
 
 def parse_command(command_str: str) -> dict:
