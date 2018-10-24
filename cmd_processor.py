@@ -188,7 +188,7 @@ def print_web_elements(elements):
         print_pretty_html(html)
 
 
-def completer(command_str: str, options_dict, all_commands):
+def completer(command_str: str, options_dict: dict, all_commands: list):
 
     if len(command_str) < 2:
         return all_commands, -len(command_str)
