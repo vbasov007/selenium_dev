@@ -1,0 +1,113 @@
+# open portal: def open_idis(url, login, password)
+start url=https://portal.intra.infineon.com/irj/portal
+# enter login and password
+wait id=logonuidfield
+click id=logonuidfield
+sendkeys id=logonuidfield string=basov
+click id=logonuidfield
+sendkeys id=logonpassfield string=Planet%Mars%Flight -enter
+# wait load page with favorities
+wait xpath="//*[contains(text(),'PC1 CRM Web Client')]" time=10
+# below is possible but opens new browser window
+# click xpath="//*[contains(text(),'PC1 CRM Web Client')]"
+# open idis
+get url="https://sappc1lb.eu.infineon.com:8410/sap(bD1lbiZjPTEwMCZkPW1pbg==)/bc/bsp/sap/crm_ui_start/default.htm"
+wait time=5
+# check if idis loaded
+find_element xpath="//*[contains(text(),'Home - [SAP]')]"
+
+
+# def is_idis_start_page 
+
+# def open_dreg_search_page()
+
+# click 'Sales Center' and 'Design Registrations'
+switch_to_frame index=0
+switch_to_frame index=1
+click xpath="//*[contains(text(),'Sales Center')]"
+switch_to_frame index=0
+switch_to_frame index=1
+# below doesn't work
+# click xpath="//*[contains(text(),'Design Registrations')]"
+# click Design Registrations 
+wait id="C19_W49_V50_HT-DR-SR"
+click id="C19_W49_V50_HT-DR-SR"
+
+#def open_dreg_page(dreg_id)
+stop_script
+# check if search page is here
+wait_element xpath="//*[contains(text(),'Search: Design Registrations - [SAP]')]" time=10
+
+# change first line in the form to "Design Registration ID"
+wait id="C22_W66_V67_V68_btqopp_parameters[1].FIELD" time=5
+click id="C22_W66_V67_V68_btqopp_parameters[1].FIELD"
+wait link_text='Design Registration ID' time=5
+click link_text='Design Registration ID'
+wait time=3
+# type DREG ID and "enter" instead of search button
+sendkeys id=C22_W66_V67_V68_btqopp_parameters[1].VALUE1 string=20279935 -enter
+# wait search results and click on DREG ID
+wait link_text=20279935
+click link_text=20279935
+
+wait time=5
+# check we are on dreg page
+find_elements(xpath, //*[contains(text(),'Design Registration Details')])
+
+def is_dreg_not_blocked_by_other_user()
+
+# check if DREG blocked for editing by other user
+find_elements xpath="//*[contains(text(),'is being processed')]"
+
+stop_script
+
+def edit_dreg(status, reason, approver, )
+# press Edit button
+click xpath="//img[@title='Edit Page']"
+wait time=5
+
+# Send Ctrl-Q to press Cancel
+# send_ctrl_key tag=body key=q
+
+# Send Ctrl-S to Press Save
+# send_ctrl_key tag=body key=s
+
+# choose Approve from registration status
+click id='C24_W74_V76_V80_btstatus_struct.act_status-btn'
+wait link_text=Approved time=5
+click link_text=Approved
+
+wait time=3
+
+stop_script
+
+# choose Reject from registration status
+click id='C24_W74_V76_V80_btstatus_struct.act_status-btn'
+wait link_text=Rejected
+click link_text=Rejected
+
+wait time=5
+
+#choose already registered
+click id='C24_W74_V76_V80_btsubject_struct.conc_key-btn'
+click link_text="Already registered to another disti"
+
+wait time=3
+# set IFX approver
+clear id=C24_W74_V76_V80_btparterapprover_struct.partner_no
+sendkeys id=C24_W74_V76_V80_btparterapprover_struct.partner_no string='Vasily Basov' -enter
+wait time=5
+
+#read value of Design Registration Category:
+get_attribute id=C24_W74_V76_V80_btcustomerh_ext.zzqp_dmnd_flg attr=value
+
+# change Design Registration Category
+click id=C24_W74_V76_V80_btcustomerh_ext.zzqp_dmnd_flg
+click link_text="Opportunity Tracking"
+
+def save_edited_dreg()
+
+# press Back button in DREG page
+# wait id=BackButton
+# click id=BackButton
+
